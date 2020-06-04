@@ -1,0 +1,33 @@
+public class scoreSolution {
+
+    public static int fitness(Integer[] s, Integer[][] incM) {
+        //set fitness to 0
+        int f = 0;
+
+        //begin first loop
+        for (int i = 0; i < s.length; i++) {
+
+            //begin 2nd loop in order to compare each module
+            for (int j = i + 1; j < s.length; j++) {
+
+                /*        if the module in position [i] is within
+                          clash range of module in position [j]
+                          check the incidence matrix value in
+                          position [i][j]. a value of 1 indicates
+                          that these two modules are adjacent,
+                 */
+                 
+                if (checkClash.clash(s[i], s[j]) && incM[i][j] == 1) {
+                    //if a clash is detected, add one to the fitness
+                    f++;
+                }
+
+            }
+
+        }//end loops
+        
+        //return total fitness of solution
+        return f;
+    }
+
+}
