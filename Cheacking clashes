@@ -1,0 +1,18 @@
+public class checkClash {
+
+    public static Boolean clash(int i, int j) {
+        //set the boolean to be initially false
+        Boolean b = false;
+        //find the difference between sthe two slot positions passed
+        int diff = Math.abs(j - i);
+        //if they this difference is within 4 slots(which equals 2 days)
+        if (diff < 4) {
+            //set the posibility of a clash to trie
+            b = true;
+        }
+       //return decision on posibility of a clash
+        return b;
+        
+    }
+
+}
