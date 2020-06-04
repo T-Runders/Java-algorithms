@@ -1,0 +1,30 @@
+public class randomSearch {
+    
+    
+    
+    public static Integer[] runRandom(Integer[][] incM) throws IOException{
+        boolean stopping;
+        stopping = false; //set stopping criteria to false
+        int solCount = 0; //set solution count to zero
+        int exams = Main.getExams(); //get the number of exams
+        int iter = Main.getMaxIterations(); //get the maximum number of iteration
+        int numSlots = Main.getNumSlots();  //get the number of slots
+        Integer[] best; 
+        best = generateSolution.genSol(); //create best solution and initialize it as best
+        Integer[] newSol = new Integer[exams]; //create solution array of size=number of exams
+        
+        //begin loop
+        while(scoreSolution.fitness(best, incM) != 0 && solCount < iter){
+            solCount++; //
+            newSol = generateSolution.genSol(); //generate new solution
+            //decide if newly generated solution is better than best solution
+            if(scoreSolution.fitness(newSol, incM)< scoreSolution.fitness(best, incM))
+                //if true, set best to be the new solution
+                best = newSol;
+            System.out.println(scoreSolution.fitness(best,incM));
+            
+        } //end loop
+        return best; //return best solution found
+    } 
+    
+}
