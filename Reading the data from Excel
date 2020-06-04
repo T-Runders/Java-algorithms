@@ -1,0 +1,180 @@
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import static java.lang.String.format;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import java.sql.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+public class ReadFromExcel {
+
+    private Connection con;
+    private Statement st;
+    private ResultSet rs;
+    private ArrayList<ArrayList<String>> listOfRows;
+    private ArrayList<String> rows;
+
+    public ReadFromExcel() {
+
+        this.listOfRows = new ArrayList<>();
+        this.rows = new ArrayList<>();
+
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/honours", "root", "");
+            st = con.createStatement();
+        } catch (Exception ex) {
+            System.out.println("Erro: " + ex);
+        }
+    }
+
+    public ArrayList<ArrayList<String>> readFromEx() throws IOException {
+        FileInputStream fis = new FileInputStream(new File("input spreadsheet.xlsx"));
+        //create workbook instance that refers to the .xlsx file
+        XSSFWorkbook wb = new XSSFWorkbook(fis);
+        //create a sheet object to retrieve the sheet
+
+        FormulaEvaluator formulaEvaluator = wb.getCreationHelper().createFormulaEvaluator();
+
+        XSSFSheet sheet = wb.getSheetAt(0);
+        sheet.getFirstRowNum();
+        //System.out.println(wb.getSheetName(0));
+
+        for (Row row : sheet) {
+            //System.out.println("rownum: " + row.getRowNum());
+
+            for (Cell cell : row) {
+                //System.out.println(cell.toString());
+
+                if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
+                    rows.add(cell.getStringCellValue());
+                } else if (cell.getCellType() == Cell.CELL_TYPE_FORMULA) {
+                    rows.add(cell.getStringCellValue());
+                } else if (cell.getCellType() == Cell.CELL_TYPE_BLANK) {
+                    cell.setCellType(Cell.CELL_TYPE_STRING);
+                    rows.add(cell.getStringCellValue());
+                } else if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
+                    cell.setCellType(Cell.CELL_TYPE_STRING);
+                    rows.add(cell.getStringCellValue());
+                }
+            }
+
+            listOfRows.add(new ArrayList<String>(rows));
+            rows.clear();
+
+        }
+
+        //read the values from the first column of the spreadsheet, and into an arraylst
+//        for (int i = 0; i < listOfColumns.size(); i++) {
+//            for (Row r : sheet) {
+//                Cell c = r.getCell(0);
+//                if (c != null) {
+//                    if (c.getCellType() == Cell.CELL_TYPE_STRING) {
+//                        listOfColumns.get(i).add(c.getStringCellValue());
+//                    } else if (c.getCellType() == Cell.CELL_TYPE_FORMULA && c.getCachedFormulaResultType() == Cell.CELL_TYPE_NUMERIC) {
+//                        listOfColumns.get(i).add(c.getStringCellValue());
+//                    }
+//                }
+//            }
+//        }
+        System.out.println(Arrays.toString(listOfRows.get(0).toArray()));
+        //return listOfColumns;
+        System.out.println(listOfRows.size());
+        return listOfRows;
+
+    }
+
+    public void ReadFromDB() {
+        try {
+
+            String query = "SELECT * FROM `module` WHERE `exam_cw`!= '0/100' ORDER BY `module`.`modulenum` ASC";
+            rs = st.executeQuery(query);
+            System.out.println("records from database");
+
+            List<String> coursesAr = new ArrayList<>();
+
+            while (rs.next()) {
+                coursesAr.add(rs.getString("courses"));
+
+            }
+
+            Integer[][] incidenceMatrix = new Integer[coursesAr.size()][];
+
+            for (int row = 0; row < incidenceMatrix.length; row++) {
+                for (int col = 0; col < incidenceMatrix.length; col++) {
+                    incidenceMatrix[row] = new Integer[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+                }
+            }
+
+            for (int i = 0; i < coursesAr.size(); i++) {
+                if (coursesAr.get(i).contains("[E]")) {
+
+                    coursesAr.set(i, coursesAr.get(i).replace("[E]", ""));
+                }
+
+                String[] tokens = coursesAr.get(i).split("; ");
+                for (String indiv : tokens) {
+
+                    for (int j = i + 1; j < coursesAr.size(); j++) {
+                        if (coursesAr.get(j).contains(indiv)) {
+                            System.out.println(i + " and" + j + " have " + indiv + " in common");
+                            //System.out.println(indiv + " from course " + coursesAr.get(i) + " is contained in the following string: "  + coursesAr.get(j) + " position: " + j);
+                            incidenceMatrix[i][j] = 1;
+                            incidenceMatrix[j][i] = 1;
+                        }
+
+                    }
+
+                }
+            }
+
+            System.out.println(Arrays.deepToString(incidenceMatrix));
+
+        } catch (Exception ex) {
+            System.out.println(ex);
+
+        }
+    }
+
+    public void insertData() {
+        try {
+            String delete = "DELETE FROM `module` WHERE 1";
+            PreparedStatement del = con.prepareStatement(delete);
+            del.execute();
+            String insert = "INSERT INTO module (modulenum, moduletitle, school, coordinator, numofstudents, exam_cw, Courses, Notes) VALUES (?,?,?,?,?,?,?,?)";
+
+            PreparedStatement ps = con.prepareStatement(insert);
+
+            for (ArrayList<String> ar1 : listOfRows) {
+                for (int i = 0; i < 8; i++) {
+                    ps.setString(i + 1, ar1.get(i));
+
+                }
+                ps.addBatch();
+            }
+            int[] result = ps.executeBatch();
+        } catch (Exception ex) {
+            System.out.println(ex);
+        }
+    }
+}
+
