@@ -1,0 +1,30 @@
+public class HillClimber {
+    
+    public static Integer [] runHillClimb(Integer[][] incM){
+        //initialize variables used by the algorithm
+        boolean stopping; 
+        stopping = false;
+        int solCount = 0;
+        int exams = Main.getExams();
+        int iter = Main.getMaxIterations();
+        int numSlots = Main.getNumSlots();
+        Integer[] best;
+        best = generateSolution.genSol();
+        Integer[] newSol = new Integer[exams];
+        List<Integer> data = new ArrayList<>();
+        
+        while( scoreSolution.fitness(best, incM) !=0 && solCount < iter){
+            solCount++; //iterate solution count
+            newSol = Mutate.mutateNbr(best, incM); //generate a solution that is a neighbour of best
+            //if neighbour solution has a better score than best, assign new to best
+            if(scoreSolution.fitness(newSol, incM) < scoreSolution.fitness(best, incM)){
+                best = newSol;
+            }  
+        for(int i = 0; i < best.length; i ++){    
+        }
+        System.out.println(scoreSolution.fitness(best,incM));
+        }
+       return best;        
+    }
+
+}
