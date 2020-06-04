@@ -1,0 +1,40 @@
+public class SimulatedAnnealing {
+
+    public static Integer[] runSimAn(Integer[][] incM) throws IOException {
+        //intialize variables
+        boolean stopping;
+        stopping = false;
+        int solCount = 0;
+        int exams = Main.getExams();
+        int iter = Main.getMaxIterations();
+        int numSlots = Main.getNumSlots();
+        Integer[] best;
+        best = generateSolution.genSol();
+        Integer[] newSol = new Integer[exams];
+        double t = 300;         //set starting temperature for cooling schedule
+
+        while (scoreSolution.fitness(best, incM) != 0 && solCount < iter) {
+            solCount++;
+            //update t by t = t * fraction
+            double dummy = t;
+            dummy = t * 0.98;
+            t = dummy;
+            //generate a new solution that is a neighbour to current best
+            newSol = Mutate.mutateNbr(best, incM);
+            //if new solution > best, assign best = new
+            if (scoreSolution.fitness(newSol, incM) < scoreSolution.fitness(best, incM)) {
+                best = newSol;
+            } else {
+                //if new solution < best calculate probaility of moving to it
+                int diff = scoreSolution.fitness(newSol, incM) - scoreSolution.fitness(best, incM);
+                double prob = 1 / Math.exp(diff) / t;
+                double r = Math.random();
+                if (r > prob) {
+                    best = newSol;
+                }
+            }
+            System.out.println(scoreSolution.fitness(best, incM));
+        }
+        return best;
+    }
+}
