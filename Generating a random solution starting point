@@ -1,0 +1,16 @@
+public class generateSolution {
+
+
+    public static Integer[] genSol() {
+        Integer[] s = new Integer[Main.getExams()]; //create an integer array of length=number of exams
+        //begin loop
+        for (int m = 0; m < s.length; m++) {
+            //set each module to have a random slot
+            s[m] = (int) (Math.random() * Main.getNumSlots());
+
+        }
+        //return solution array
+        return s;
+    }
+
+}
