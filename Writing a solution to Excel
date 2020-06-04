@@ -1,0 +1,255 @@
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/**
+ *
+ * @author HP
+ */
+public class WriteToExcel {
+    
+    private Connection con;
+    private Statement st;
+    private ResultSet rs;
+
+    public WriteToExcel() {
+              try {
+            Class.forName("com.mysql.jdbc.Driver");
+
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/honours", "root", "");
+            st = con.createStatement();
+        } catch (Exception ex) {
+            System.out.println("Erro: " + ex);
+        }
+    }
+    
+    
+        public void printToExcel(Integer[] s) {
+//                HSSFWorkbook workbook = new HSSFWorkbook();
+//        HSSFSheet sheet = workbook.createSheet("FirstExcelSheet");
+//        HSSFRow row = sheet.createRow(1);
+
+           List<String> title = new ArrayList<>();
+            List<String> num = new ArrayList<>();
+            List<String> courses = new ArrayList<>();
+    try {
+
+            String query = "SELECT `moduletitle`,`modulenum`,`Courses` FROM `module` WHERE `exam_cw`!= '0/100' ORDER BY `module`.`modulenum` ASC";
+            rs = st.executeQuery(query);
+            //System.out.println("records from database");
+
+           
+            
+            while (rs.next()) {
+                title.add(rs.getString("moduletitle"));
+                num.add(rs.getString("modulenum"));
+                courses.add(rs.getString("courses"));
+                
+            }
+        } catch (Exception ex) {
+            System.out.println(ex);
+        }
+
+        HSSFWorkbook wb = new HSSFWorkbook();
+        HSSFSheet sheet = wb.createSheet("Headings Test");
+        //sheet.
+
+        Row rowHeading = sheet.createRow(0);
+        rowHeading.createCell(0).setCellValue("DATE");
+        rowHeading.createCell(1).setCellValue("DAY");
+        rowHeading.createCell(2).setCellValue("TIME");
+        rowHeading.createCell(3).setCellValue("ROOM");
+        rowHeading.createCell(4).setCellValue("SITE");
+        rowHeading.createCell(5).setCellValue("MODULE NO.");
+        rowHeading.createCell(6).setCellValue("MODULE NAME");
+        rowHeading.createCell(7).setCellValue("COURSE");
+        rowHeading.createCell(8).setCellValue("NOTES");
+        
+
+        CellStyle style = wb.createCellStyle();//Create style
+        style.setFillForegroundColor(IndexedColors.AQUA.getIndex());
+        style.setFillPattern(CellStyle.SOLID_FOREGROUND);
+        style.setBorderBottom(CellStyle.BORDER_MEDIUM);
+        style.setBottomBorderColor(IndexedColors.BLACK.getIndex());
+        style.setBorderLeft(CellStyle.BORDER_MEDIUM);
+        style.setLeftBorderColor(IndexedColors.BLACK.getIndex());
+        style.setBorderRight(CellStyle.BORDER_MEDIUM);
+        style.setRightBorderColor(IndexedColors.BLACK.getIndex());
+        style.setBorderTop(CellStyle.BORDER_MEDIUM);
+        style.setTopBorderColor(IndexedColors.BLACK.getIndex());
+        style.setAlignment(CellStyle.ALIGN_CENTER);
+        //style.setWrapText(true);
+        //style.setVerticalAlignment((short) 12);
+
+        Font font = wb.createFont();//Create font
+        font.setBoldweight(Font.BOLDWEIGHT_BOLD);//Make font bold
+        font.setFontHeightInPoints((short) 14);
+        font.setFontName("Verdana");
+        font.setUnderline(Font.U_SINGLE);
+        //font.setColor(IndexedColors.AQUA.getIndex());
+        style.setFont(font);//set it to bold
+
+        for (int i = 0; i < rowHeading.getLastCellNum(); i++) {//For each cell in the row 
+            rowHeading.getCell(i).setCellStyle(style);//Set the style
+            sheet.autoSizeColumn(i);
+        }
+        
+        for (int i = 0; i < s.length; i++){
+            Row row = sheet.createRow(i +1);
+            row.createCell(0).setCellValue("(slot position) " + s[i]);
+            row.createCell(1).setCellValue(findDay(s[i]));
+            row.createCell(5).setCellValue(num.get(i));
+            row.createCell(6).setCellValue(title.get(i));
+            row.createCell(7).setCellValue(courses.get(i));
+            
+            /*the code bellow is to determine whether the
+            slot position is an odd or even number, and thus
+            whether it is a morning exam or afternoon exam.
+            even = morning; odd = afternoon
+            */
+            
+            if(s[i] % 2 == 0){
+                row.createCell(2).setCellValue("10.00 AM");
+                
+            } else{
+                row.createCell(2).setCellValue("14.30 PM");
+            }
+            
+            
+            sheet.autoSizeColumn(i);
+        }
+
+        try{
+            FileOutputStream fileOut = new FileOutputStream("Book1.xls");
+            wb.write(fileOut);
+            fileOut.close();
+        } catch (IOException e) {
+            System.out.println("IOException:");
+            System.out.println(e.getMessage());
+        }
+
+    }
+        
+    public String findDay(int f){
+    String day = "";
+    
+    switch(f)
+    {
+        case 0:
+            day = "Monday AM";
+            break;
+        case 1:
+            day = "Monday PM";
+            break;
+        case 2:
+            day = "Tuesday AM";
+            break;
+        case 3:
+            day = "Tuesday PM";
+            break;
+        case 4:
+            day = "Wednesday AM";
+            break;
+        case 5:
+            day = "Wednesday PM";
+            break;
+        case 6:
+            day = "Thursday AM";
+            break;
+        case 7:
+            day = "Thursday PM";
+            break;
+        case 8:
+            day = "Friday AM";
+            break;
+        case 9:
+            day = "Friday PM";
+            break;
+        case 10:
+            day = "2nd Monday AM";
+            break;
+        case 11:
+            day = "2nd Monday PM";
+            break;
+        case 12:
+            day = "2nd Tuesday AM";
+            break;
+        case 13:
+            day = "2nd Tuesday PM";
+            break;
+        case 14:
+            day = "2nd Wednesday AM";
+            break;
+        case 15:
+            day = "2nd Wednesday PM";
+            break;
+        case 16:
+            day = "2nd Thursday AM";
+            break;
+        case 17:
+            day = "2nd Thursday PM";
+            break;
+        case 18:
+            day = "2nd Friday AM";
+            break;
+        case 19:
+            day = "2nd Friday PM";
+
+    }
+    return day;
+} 
+    
+    public static void printExperiments(List<Integer> c1){
+       
+        List<Integer> fitness;
+        fitness = c1;
+        
+
+
+        HSSFWorkbook wb = new HSSFWorkbook();
+        HSSFSheet sheet = wb.createSheet("exp");
+        //sheet.
+        //Row row = sheet.createRow(1);
+        for (int i = 0; i < fitness.size(); i++){
+            Row row = sheet.createRow(i);
+            
+            row.createCell(0).setCellValue(fitness.get(i));
+            sheet.autoSizeColumn(i);
+        }
+     
+
+        try{
+            FileOutputStream fileOut = new FileOutputStream("experiments.xls");
+            wb.write(fileOut);
+            fileOut.close();
+        } catch (IOException e) {
+            System.out.println("IOException:");
+            System.out.println(e.getMessage());
+        }
+        
+        
+        
+    }
+    
+}
