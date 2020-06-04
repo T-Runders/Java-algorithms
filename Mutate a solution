@@ -1,0 +1,27 @@
+public class Mutate {
+    
+        public static Integer[] mutateNbr(Integer[] s, Integer[][] incM){
+        Integer [] nbr = new Integer[s.length];
+        for(int i = 0; i < nbr.length;  i++){
+            nbr[i] = s[i];
+        }
+        
+        ArrayList clashes = new ArrayList<>();
+        clashes = recordClashes.getClashes(s, incM);
+        int rand = new Random().nextInt(clashes.size());
+        
+        int clashIndex = (int) clashes.get(rand);
+        nbr[clashIndex] = (int) (Math.random() * Main.getNumSlots());
+        
+        
+        for(int i = 0; i < nbr.length; i ++){
+            
+        }
+        
+        
+        return nbr;
+        
+        
+    }
+
+}
