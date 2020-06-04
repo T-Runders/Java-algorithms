@@ -1,0 +1,89 @@
+public class createIncidence {
+
+    private Connection con;
+    private Statement st;
+    private ResultSet rs;
+
+    List<String> coursesAr = new ArrayList<>();
+
+    public createIncidence() {
+
+        //establic connection to database
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/honours", "root", "");
+            st = con.createStatement();
+        } catch (Exception ex) {
+            System.out.println("encountered " + ex + " error code");
+        }
+    }
+
+    public Integer[][] createIncMatFromDB() {
+
+        try {
+            //construct select query to retrieve only modules with an exam, and order by module code
+            String query = "SELECT * FROM `module` WHERE `exam_cw`!= '0/100' ORDER BY `module`.`modulenum` ASC";
+            rs = st.executeQuery(query);
+
+            //add the string result of the "courses" column  to an arraylist
+            while (rs.next()) {
+                coursesAr.add(rs.getString("courses"));
+
+            }
+        } catch (Exception ex) {
+            System.out.println(ex);
+        }
+
+        //construct 2d integer array that will serve as the systems incidence matrix
+        Integer[][] incidenceMatrix = new Integer[coursesAr.size()][coursesAr.size()];
+
+        for (Integer[] row : incidenceMatrix) {
+            Arrays.fill(row, 0);
+        }
+
+        /*the following for loop filters out unneeded characters contained within the courses
+        column. the string being filtered out "[E]" signifies on the timetable
+        that the associated module can be taken as an elective by students on
+        any course that is displayed with an "[E]" next to it. this is filtered out
+        because it isn't relevant to the system, and leaving it in would result
+        in the course not recognizing the two string representing the course - one without
+        "[E]" and one with it as exactly the same course
+         */
+        for (int i = 0; i < coursesAr.size(); i++) {
+            if (coursesAr.get(i).contains("[E]")) {
+
+                coursesAr.set(i, coursesAr.get(i).replace("[E]", ""));
+            }
+            //for each course string, split at the deliminter, and
+            //add each token to an array
+            String[] tokens = coursesAr.get(i).split("; ");
+            /*
+            the code following demonstrates the logic behind detecting two
+            adjacent algorithms. for each course that is represented in the course
+            string for each module, take each tokenized course in isolation and
+            compare it to the course string of every module in the collection. 
+            if the course string contains this token, this signifies that the
+            the two modules are being offered by the same course, meaning they
+            will clash if scheduled together. and thus a 1 should be written in the
+            incidence matrix at the corresponding index position
+             */
+            for (String indiv : tokens) {
+
+                for (int j = i + 1; j < coursesAr.size(); j++) {
+                    if (coursesAr.get(j).contains(indiv)) {
+
+                        incidenceMatrix[i][j] = 1;
+                        incidenceMatrix[j][i] = 1;
+                    }
+
+                }
+
+            }
+        }
+
+        //retrun incidence matrix
+        return incidenceMatrix;
+    }
+
+}
